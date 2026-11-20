@@ -1,0 +1,22 @@
+{
+  "name": "SkyPulse.pl – Porównywarka Lotów",
+  "short_name": "SkyPulse",
+  "description": "Porównywarka tanich lotów i kalendarz cen z polskich lotnisk",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#161B22",
+  "theme_color": "#2563EB",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

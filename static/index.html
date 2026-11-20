@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="pl" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#161B22" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>SkyPulse.pl – Wyszukiwarka Tanich Lotów z Poszanowaniem Czasu</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          },
+          colors: {
+            softBg: '#161B22',
+            softCard: '#1F2631',
+            softAlt: '#262F3D',
+            softBorder: '#303B4C',
+            ocean: '#3B82F6',
+            sage: '#10B981',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --bg-main: #161B22;
+      --bg-card: #1F2631;
+      --bg-alt: #262F3D;
+      --border-col: #303B4C;
+      --text-main: #F1F5F9;
+      --text-muted: #94A3B8;
+      --accent-blue: #3B82F6;
+      --accent-green: #10B981;
+    }
+    html.light-theme {
+      --bg-main: #F4F1EA;
+      --bg-card: #FFFFFF;
+      --bg-alt: #ECE8DF;
+      --border-col: #D8D2C5;
+      --text-main: #1E293B;
+      --text-muted: #64748B;
+      --accent-blue: #2563EB;
+      --accent-green: #059669;
+    }
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      padding-bottom: 112px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      overflow-x: clip;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    input, textarea, select {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    .calm-panel {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-col);
+    }
+    .calm-alt {
+      background-color: var(--bg-alt);
+      border: 1px solid var(--border-col);
+    }
+    .boarding-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-col);
+      position: relative;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .boarding-card:hover {
+      border-color: var(--accent-blue);
+    }
+    .ticket-divider {
+      position: relative;
+      border-top: 1px dashed var(--border-col);
+    }
+    .ticket-divider::before,
+    .ticket-divider::after {
+      content: '';
+      position: absolute;
+      top: -9px;
+      width: 18px;
+      height: 18px;
+      background-color: var(--bg-main);
+      border: 1px solid var(--border-col);
+      border-radius: 9999px;
+    }
+    .ticket-divider::before {
+      left: -25px;
+      border-left-color: transparent;
+      border-bottom-color: transparent;
+      transform: rotate(45deg);
+    }
+    .ticket-divider::after {
+      right: -25px;
+      border-right-color: transparent;
+      border-top-color: transparent;
+      transform: rotate(45deg);
+    }
+    .airport-active {
+      background-color: rgba(16, 185, 129, 0.16) !important;
+      color: var(--accent-green) !important;
+      border-color: var(--accent-green) !important;
+      font-weight: 700;
+    }
+    .toggle-pill-active {
+      background-color: rgba(59, 130, 246, 0.18) !important;
+      border-color: var(--accent-blue) !important;
+      color: var(--accent-blue) !important;
+      font-weight: 700;
+    }
+    input[type="range"] {
+      accent-color: #3B82F6;
+    }
+    .text-muted-custom {
+      color: var(--text-muted);
+    }
+    .text-amber-custom {
+      color: #fbbf24;
+    }
+    html.light-theme .text-amber-custom {
+      color: #b45309;
+    }
+    .text-purple-custom {
+      color: #c084fc;
+    }
+    html.light-theme .text-purple-custom {
+      color: #7e22ce;
+    }
+    html.light-theme .text-blue-400 {
+      color: #2563eb;
+    }
+  </style>
+</head>
+<body class="min-h-screen selection:bg-blue-500 selection:text-white">
+
+  <!-- ================= ONBOARDING / MANUAL POP-UP ================= -->
+  <div id="helpModal" onclick="if(event.target===this) closeHelpModal(false)" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+    <div class="calm-panel max-w-3xl w-full max-h-[90vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden">
+      <div class="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 border-b border-slate-700/40 shrink-0 space-y-3">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <span class="text-[11px] font-semibold px-2.5 py-0.5 bg-blue-500/15 text-blue-400 rounded-lg">Przewodnik SkyPulse.pl</span>
+            <h2 class="text-base sm:text-xl font-bold mt-1.5">Jak korzystać z wyszukiwarki?</h2>
+            <p class="text-[11px] sm:text-xs text-muted-custom mt-0.5">Wszystkie funkcje: loty z Polski i ze świata, składaki 2×1, noclegi, kalendarz i czartery live</p>
+          </div>
+          <button type="button" onclick="closeHelpModal(false)" aria-label="Zamknij instrukcję" class="w-8 h-8 rounded-lg calm-alt hover:opacity-80 font-bold text-sm flex items-center justify-center shrink-0">✕</button>
+        </div>
+
+        <div id="helpFilterChips" class="flex items-center gap-1.5 flex-wrap text-[11px] sm:text-xs">
+          <button type="button" data-help-cat="all" onclick="setHelpSection('all', this)" class="help-sec-btn px-2.5 py-1 rounded-lg font-semibold bg-blue-600 text-white">Wszystko</button>
+          <button type="button" data-help-cat="search" onclick="setHelpSection('search', this)" class="help-sec-btn px-2.5 py-1 rounded-lg font-semibold calm-alt text-muted-custom">1. Kierunki i Skąd ⇄ Dokąd</button>
+          <button type="button" data-help-cat="filters" onclick="setHelpSection('filters', this)" class="help-sec-btn px-2.5 py-1 rounded-lg font-semibold calm-alt text-muted-custom">2. Bagaż, Bilety i Noclegi</button>
+          <button type="button" data-help-cat="tabs" onclick="setHelpSection('tabs', this)" class="help-sec-btn px-2.5 py-1 rounded-lg font-semibold calm-alt text-muted-custom">3. Zakładki, Czartery i API</button>
+        </div>
+      </div>
+
+      <div id="helpScrollBody" class="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-3 text-xs">
+        <div data-help-sec="search" class="space-y-2">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-blue-400">1. Wybór trasy i wyszukiwanie w obie strony</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div class="calm-alt rounded-xl p-3 space-y-1">
+              <div class="font-bold text-blue-400">Ponad 3180 lotnisk (Polska + Świat)</div>
+              <p class="text-muted-custom leading-relaxed">
+                W polu <strong>„Skąd:”</strong> wpisz miasto, kraj lub kod IATA (np. <em>Madera, FNC, Bangkok</em>) albo kliknij <strong>PL (12)</strong>. W polu <strong>„Dokąd:”</strong> wpisz cel lub wybierz z listy <strong>Kierunek</strong> (w tym <strong>Polska</strong> dla lotów krajowych i <strong>Świat</strong>).
+              </p>
+            </div>
+            <div class="calm-alt rounded-xl p-3 space-y-1">
+              <div class="font-bold text-emerald-500">Powroty z zagranicy (⇄) i Resetuj</div>
+              <p class="text-muted-custom leading-relaxed">
+                Jesteś już za granicą? Wpisz obecne miasto w <strong>„Skąd:”</strong> i kliknij <strong>⇄</strong> albo <strong>„Powrót do Polski”</strong> — limity ceny i czasu dopasują się same. Przycisk <strong>„Resetuj”</strong> przywraca ustawienia podstawowe.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div data-help-sec="filters" class="space-y-2">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-500">2. Bagaż, czas podróży, bilety 2×1 i noclegi</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div class="calm-alt rounded-xl p-3 space-y-1">
+              <div class="font-bold text-blue-400">Ekipa (- / +) i 5 opcji Bagażu</div>
+              <p class="text-muted-custom leading-relaxed">
+                Ustaw liczbę osób na pasku u góry i wybierz <strong>Bagaż</strong> (plecak 0 zł, kabinowa 10 kg, rejestrowana 20 / 32 kg lub <strong>wspólna 1 walizka na całą Ekipę</strong>). Karty pokazują koszt za osobę i sumę grupy.
+              </p>
+            </div>
+            <div class="calm-alt rounded-xl p-3 space-y-1">
+              <div class="font-bold text-blue-400">Poszanowanie czasu, Święta i Suwaki</div>
+              <p class="text-muted-custom leading-relaxed">
+                Klikaj filtry: <strong>Weekend bez urlopu</strong>, <strong>Wygodne godziny (07–22:30)</strong>, <strong>Ciepłe kraje 18°C+</strong> oraz gotowe <strong>Święta i długie weekendy</strong>. Daty, budżet i przesiadki ustawisz w <strong>Suwakach czasu i budżetu</strong>.
+              </p>
+            </div>
+            <div class="calm-alt rounded-xl p-3 space-y-1">
+              <div class="font-bold text-emerald-500">Składak 2×1 i weryfikacja bez prowizji</div>
+              <p class="text-muted-custom leading-relaxed">
+                Karty <strong>„2×1 bez marży”</strong> łączą dwa osobne bilety („1. Tam →” i „2. Powrót →”). Dla przewoźników innych niż Ryanair Direct pod przyciskami znajdziesz pasek <strong>Google Flights (uzupełnione daty) →</strong> (a dla Wizz Air także <strong>Trasa WizzAir.com →</strong>).
+              </p>
+            </div>
+            <div class="calm-alt rounded-xl p-3 space-y-1">
+              <div class="font-bold text-amber-custom">Noclegi: Booking, Airbnb i Agoda</div>
+              <p class="text-muted-custom leading-relaxed">
+                Wybierz sortowanie <strong>„Z noclegiem”</strong> lub klikaj linki <strong>Booking</strong>, <strong>Airbnb</strong> i <strong>Agoda</strong> na dole karty lotu — daty pobytu oraz liczba osób (Ekipa) uzupełniają się automatycznie.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div data-help-sec="tabs" class="space-y-2">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-purple-custom">3. Zakładki, okazje czarterowe i dodatkowe API</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div class="calm-alt rounded-xl p-3 space-y-1">
+              <div class="font-bold text-blue-400">Porównaj (+ Porównaj) i Kalendarz</div>
+              <p class="text-muted-custom leading-relaxed">
+                Kliknij <strong>„+ Porównaj”</strong> na 2–3 lotach, aby zestawić je obok siebie, albo otwórz zakładkę <strong>Porównaj</strong> (historia cen i porównanie linii vs wyszukiwarka). W <strong>Kalendarzu</strong> sprawdzisz najtańsze dni dla trasy <strong>Skąd ⇄ Dokąd</strong>.
+              </p>
+            </div>
+            <div class="calm-alt rounded-xl p-3 space-y-1">
+              <div class="font-bold text-emerald-500">Czartery na żywo z 3 polskich portali</div>
+              <p class="text-muted-custom leading-relaxed">
+                Zakładka <strong>Czartery</strong> pobiera świeże okazje z <strong>Fly4free.pl</strong>, <strong>MlecznePodróże.pl</strong> i <strong>WakacyjniPiraci.pl</strong> (w tym czartery TUI/Rainbow, all-inclusive i błędy taryfowe) z własnym wyszukiwaniem i filtrami.
+              </p>
+            </div>
+            <div class="calm-alt rounded-xl p-3 space-y-1">
+              <div class="font-bold text-emerald-500">Ekipa, WhatsApp, E-mail i Strażnik 24/7</div>
+              <p class="text-muted-custom leading-relaxed">
+                Przyciskiem <strong>„+ Ekipa”</strong> dodasz lot do wspólnego głosowania. Przy każdej ofercie wyślesz szczegóły na <strong>WhatsApp</strong> i <strong>E-mail</strong>, a w zakładce <strong>Ekipa</strong> włączysz alerty cenowe skanowane w tle co 60 minut.
+              </p>
+            </div>
+            <div class="calm-alt rounded-xl p-3 space-y-1">
+              <div class="font-bold text-purple-custom">Silniki lotów + opcjonalne klucze API</div>
+              <p class="text-muted-custom leading-relaxed">
+                Domyślnie działają 4 darmowe silniki (Ryanair Direct, Kiwi Multi-Airline, Składak 2×1, Czartery RSS). W zakładce <strong>Ekipa</strong> możesz dopiąć własne klucze <strong>Amadeus GDS</strong> i <strong>Travelpayouts</strong> (szyfrowane, opcjonalny kod <strong>PIN</strong>).
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-4 sm:px-6 py-3 border-t border-slate-700/40 shrink-0 space-y-2.5">
+        <div class="calm-alt rounded-xl px-3 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="text-xs">
+            <span class="font-semibold">Twoje imię (zapamiętane w Cookie):</span>
+            <span class="text-[11px] text-muted-custom block sm:inline sm:ml-1.5">• Jasny/ciemny wygląd przełączysz przyciskiem <strong>Motyw</strong> u góry.</span>
+          </div>
+          <input
+            id="modalNickInput"
+            type="text"
+            placeholder="Wpisz imię..."
+            oninput="onNickInputChange(this.value)"
+            class="calm-panel rounded-lg px-3 py-1.5 text-xs font-semibold focus:border-blue-500 focus:outline-none sm:w-48"
+          />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button type="button" onclick="closeHelpModal(false)" class="w-full calm-alt hover:opacity-85 font-bold text-xs sm:text-sm py-2.5 rounded-xl transition">
+            Zamknij tym razem
+          </button>
+          <button type="button" onclick="closeHelpModal(true)" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm py-2.5 rounded-xl transition">
+            Rozumiem, nie pokazuj przy starcie
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SIDE-BY-SIDE FLIGHT COMPARISON MODAL ================= -->
+  <div id="compareSideBySideModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div class="calm-panel max-w-5xl w-full rounded-2xl p-4 sm:p-6 space-y-4 shadow-2xl my-auto">
+      <div class="flex items-center justify-between border-b border-slate-700/40 pb-3">
+        <div>
+          <h3 class="text-base sm:text-lg font-bold">Porównanie wybranych lotów obok siebie</h3>
+          <p class="text-xs text-muted-custom">Zestawienie ceny, bagażu, czasu podróży, przesiadek, pogody i szacowanego kosztu całego wyjazdu</p>
+        </div>
+        <button onclick="closeCompareModal()" class="w-8 h-8 rounded-lg calm-alt hover:opacity-80 font-bold text-sm flex items-center justify-center">✕</button>
+      </div>
+      <div id="compareTableContainer" class="overflow-x-auto"></div>
+    </div>
+  </div>
+
+  <!-- ================= EMAIL SHARE MODAL ================= -->
+  <div id="emailShareModal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="calm-panel max-w-md w-full rounded-2xl p-5 space-y-4 shadow-2xl my-auto">
+      <div class="flex items-center justify-between border-b border-slate-700/40 pb-3">
+        <div>
+          <h3 class="text-base font-bold">Wyślij ofertę lotu na E-mail</h3>
+          <p id="emailModalSubject" class="text-xs text-blue-400 mt-0.5 truncate max-w-[280px]"></p>
+        </div>
+        <button onclick="closeEmailShareModal()" class="w-8 h-8 rounded-lg calm-alt hover:opacity-80 font-bold text-sm flex items-center justify-center">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-muted-custom font-medium mb-1">Adres E-mail odbiorcy (np. rodzice@gmail.com)</label>
+          <input id="emailModalRecipient" type="email" placeholder="np. rodzice@gmail.com" class="w-full calm-alt rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:border-blue-500 focus:outline-none" />
+        </div>
+
+        <div>
+          <label class="block text-muted-custom font-medium mb-1">Podgląd wiadomości</label>
+          <textarea id="emailModalPreview" rows="5" readonly class="w-full calm-alt rounded-xl p-3 text-xs leading-relaxed focus:outline-none"></textarea>
+        </div>
+
+        <div class="space-y-2 pt-1">
+          <button type="button" onclick="sendViaGmailWeb()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2">
+            <span>1. Otwórz i wyślij przez Gmail (w przeglądarce)</span>
+          </button>
+
+          <button type="button" onclick="sendViaDefaultMailApp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2">
+            <span>2. Otwórz aplikację pocztową (Telefon / Outlook)</span>
+          </button>
+
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="sendViaServerSmtp()" class="calm-alt hover:opacity-85 font-semibold py-2 px-3 rounded-xl transition text-center">
+              Wyślij z serwera (SMTP)
+            </button>
+            <button type="button" onclick="copyEmailContentToClipboard()" class="calm-alt hover:opacity-85 font-semibold py-2 px-3 rounded-xl transition text-center">
+              Kopiuj treść E-maila
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SQUAD PIN AUTH MODAL ================= -->
+  <div id="pinModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="calm-panel max-w-sm w-full rounded-2xl p-6 space-y-4 text-center">
+      <div class="text-xs font-bold text-blue-400">Strefa chroniona hasłem</div>
+      <div>
+        <h2 class="text-lg font-bold">Podaj kod PIN Ekipy</h2>
+        <p class="text-xs text-muted-custom mt-1">Wpisz swoje imię oraz wspólne hasło (PIN), aby odblokować wyszukiwarkę.</p>
+      </div>
+      <div class="space-y-3 text-left">
+        <div>
+          <label class="block text-xs font-medium text-muted-custom mb-1">Wpisz imię</label>
+          <input id="loginNick" type="text" placeholder="Wpisz imię..." class="w-full calm-alt rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-muted-custom mb-1">Kod PIN</label>
+          <input id="loginPin" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter') submitPinLogin()" class="w-full calm-alt rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+        </div>
+        <p id="loginError" class="hidden text-xs text-red-400 font-semibold"></p>
+      </div>
+      <button onclick="submitPinLogin()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm py-3 rounded-xl">
+        Odblokuj dostęp
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= TOP HEADER ================= -->
+  <header class="sticky top-0 z-30 calm-panel border-b px-3 sm:px-5 py-2.5 shadow-sm">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2">
+      <div class="flex items-center justify-between gap-2 min-w-0">
+        <div class="flex items-center gap-2 sm:gap-2.5 min-w-0">
+          <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm shrink-0">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 sm:gap-2">
+              <h1 id="brandTitle" class="font-bold text-[15px] sm:text-lg tracking-tight leading-none whitespace-nowrap">
+                SkyPulse.pl
+              </h1>
+              <span class="text-[10px] sm:text-[11px] font-semibold px-1.5 sm:px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-500 whitespace-nowrap shrink-0">
+                Na żywo
+              </span>
+            </div>
+            <p class="text-[11px] text-muted-custom mt-0.5 hidden sm:block">Porównywarka lotów z poszanowaniem Twojego czasu</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1 sm:gap-1.5 md:hidden shrink-0">
+          <button onclick="toggleColorTheme()" class="calm-alt text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-1.5 rounded-lg whitespace-nowrap shrink-0" title="Przełącz motyw jasny / ciemny">
+            <span class="sm:hidden">Motyw</span><span class="hidden sm:inline">Jasny / Ciemny</span>
+          </button>
+          <button onclick="openHelpModal()" class="calm-alt text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-1.5 rounded-lg whitespace-nowrap shrink-0">
+            Instrukcja
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center flex-wrap justify-between md:justify-end gap-2">
+        <button onclick="toggleColorTheme()" class="hidden md:inline-flex calm-alt hover:opacity-80 text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+          Jasny / Ciemny
+        </button>
+
+        <button onclick="openHelpModal()" class="hidden md:inline-flex calm-alt hover:opacity-80 text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+          Instrukcja
+        </button>
+
+        <div class="flex-1 sm:flex-initial flex items-center gap-1.5 calm-alt rounded-lg px-2.5 py-1.5 min-w-[120px]">
+          <svg class="w-3.5 h-3.5 text-muted-custom shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <input
+            id="headerNickInput"
+            type="text"
+            placeholder="Wpisz imię"
+            oninput="onNickInputChange(this.value)"
+            class="w-full sm:w-28 bg-transparent text-xs font-semibold placeholder-slate-400 focus:outline-none"
+          />
+        </div>
+
+        <div class="flex items-center gap-1.5 calm-alt rounded-lg px-2.5 py-1 shrink-0">
+          <span class="text-xs text-muted-custom">Ekipa:</span>
+          <button onclick="changeGroupSize(-1)" class="w-6 h-6 rounded calm-panel font-bold text-xs flex items-center justify-center">−</button>
+          <span id="groupSizeBadge" class="text-xs font-bold min-w-[38px] text-center">4 os.</span>
+          <button onclick="changeGroupSize(1)" class="w-6 h-6 rounded calm-panel font-bold text-xs flex items-center justify-center">+</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN WORKSPACE ================= -->
+  <main class="max-w-6xl mx-auto px-3 sm:px-5 pt-3 sm:pt-4 space-y-4">
+
+    <!-- ================= TAB 1: SEARCH & DEALS ================= -->
+    <section id="tab-deals" class="space-y-4">
+
+      <div class="calm-panel rounded-2xl p-3.5 sm:p-5 space-y-3.5 shadow-sm">
+
+        <!-- 1. UNIVERSAL ORIGIN (SKAD) <-> SWAP <-> DESTINATION (DOKAD) SEARCH -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
+          <div class="md:col-span-5 relative min-w-0">
+            <div class="calm-alt rounded-xl px-3 py-2.5 flex items-center gap-2 focus-within:border-emerald-500 min-w-0">
+              <span class="text-xs font-bold text-emerald-500 shrink-0">Skąd:</span>
+              <input
+                id="originSearchInput"
+                type="text"
+                autocomplete="off"
+                placeholder="Polska (12) lub np. Madera, BKK"
+                oninput="onOriginSearchInput(this.value)"
+                onfocus="if(this.value) onOriginSearchInput(this.value)"
+                class="w-full min-w-0 bg-transparent text-xs sm:text-sm font-semibold placeholder-slate-400 focus:outline-none"
+              />
+              <button type="button" onclick="resetOriginToPoland()" class="text-[11px] font-semibold text-emerald-500 hover:underline shrink-0 whitespace-nowrap" title="Ustaw wyloty z Polski (12 lotnisk)">PL (12)</button>
+            </div>
+            <div id="originSuggestionsBox" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 calm-panel rounded-xl shadow-2xl max-h-72 overflow-y-auto"></div>
+          </div>
+
+          <div class="md:col-span-1 flex justify-center">
+            <button
+              id="swapOriginDestBtn"
+              type="button"
+              onclick="swapOriginAndDest()"
+              class="calm-alt hover:border-blue-500 text-blue-400 rounded-xl w-full md:w-10 h-9 sm:h-10 flex items-center justify-center gap-1.5 text-xs font-bold transition"
+              title="Zamień lotnisko wylotu z kierunkiem docelowym"
+            >
+              <span class="text-sm leading-none">⇄</span>
+              <span class="md:hidden">Zamień Skąd ↔ Dokąd</span>
+            </button>
+          </div>
+
+          <div class="md:col-span-6 relative min-w-0">
+            <div class="calm-alt rounded-xl px-3 py-2.5 flex items-center gap-2 focus-within:border-blue-500 min-w-0">
+              <span class="text-xs font-bold text-blue-400 shrink-0">Dokąd:</span>
+              <input
+                id="countrySearchInput"
+                type="text"
+                autocomplete="off"
+                placeholder="Kraj, miasto (np. Madera, Bali)"
+                oninput="onCountrySearchInput(this.value)"
+                onfocus="if(this.value) onCountrySearchInput(this.value)"
+                class="w-full min-w-0 bg-transparent text-xs sm:text-sm font-semibold placeholder-slate-400 focus:outline-none"
+              />
+              <button type="button" onclick="resetToWholeWorld()" class="text-xs font-semibold text-blue-400 hover:underline shrink-0 whitespace-nowrap" title="Pokaż Cały Świat">Świat</button>
+            </div>
+            <div id="countrySuggestionsBox" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 calm-panel rounded-xl shadow-2xl max-h-72 overflow-y-auto"></div>
+          </div>
+        </div>
+
+        <!-- 1b. QUICK PRESET DROPDOWN & FOREIGN ORIGIN BAR -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-center">
+          <div class="md:col-span-5 calm-alt rounded-xl px-3.5 py-2 flex items-center justify-between gap-2 min-w-0">
+            <label for="countryDropdownSelect" class="text-xs font-semibold text-muted-custom shrink-0">Kierunek:</label>
+            <select id="countryDropdownSelect" onchange="onCountryDropdownChange(this.value)" class="w-full min-w-0 truncate bg-transparent text-xs sm:text-sm font-bold text-blue-400 focus:outline-none">
+              <option value="WORLD">Cały Świat</option>
+            </select>
+          </div>
+
+          <div id="foreignOriginBar" class="hidden md:col-span-7 calm-alt rounded-xl px-3 py-2 flex items-center justify-between flex-wrap gap-2">
+            <div class="text-xs min-w-0">
+              <span class="text-muted-custom">Wylot z:</span>
+              <strong id="foreignOriginLabel" class="text-emerald-500 ml-1">—</strong>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button type="button" onclick="setDestinationToPoland()" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition whitespace-nowrap">
+                Powrót do Polski
+              </button>
+              <button type="button" onclick="resetOriginToPoland()" class="text-[11px] font-semibold text-emerald-500 hover:underline whitespace-nowrap">
+                Wróć do PL (12)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. POLISH ORIGIN AIRPORTS (Saved in Cookies; Collapsible on Phone) -->
+        <div id="mobileOriginToggleWrap" class="md:hidden">
+          <button onclick="toggleMobileSection('airportsCollapseWrapper')" class="w-full calm-alt rounded-xl p-3 flex items-center justify-between text-left">
+            <div>
+              <span class="block text-[11px] text-muted-custom">Lotniska wylotu (Polska):</span>
+              <span id="mobileActiveAirportsLabel" class="text-sm font-bold text-emerald-500">Wszystkie (12 lotnisk)</span>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-lg calm-panel text-emerald-500">Zmień ▾</span>
+          </button>
+        </div>
+
+        <div id="airportsCollapseWrapper" class="hidden md:block pt-2 border-t border-slate-700/30">
+          <div class="flex items-center justify-between mb-2 flex-wrap gap-1">
+            <label class="text-xs font-bold text-emerald-500">Lotniska wylotu w Polsce (zapamiętywane w Cookie)</label>
+            <div class="flex items-center gap-2.5 text-xs font-semibold">
+              <button onclick="selectPresetAirports('ALL')" class="text-emerald-500 hover:underline">Wszystkie (12)</button>
+              <span class="text-muted-custom">•</span>
+              <button onclick="selectPresetAirports('TOP')" class="text-blue-400 hover:underline">Główne (7)</button>
+              <span class="text-muted-custom">•</span>
+              <button onclick="selectPresetAirports('SOUTH')" class="text-muted-custom hover:underline">Południe</button>
+              <span class="text-muted-custom">•</span>
+              <button onclick="selectPresetAirports('CENTER')" class="text-muted-custom hover:underline">Centrum</button>
+            </div>
+          </div>
+          <div id="airportChips" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        <!-- 3. SMART TIME FILTERS & 5 LUGGAGE OPTIONS -->
+        <div class="pt-2.5 border-t border-slate-700/30 grid grid-cols-1 lg:grid-cols-12 gap-2.5 items-center">
+          <div class="lg:col-span-5 calm-alt rounded-xl px-3 py-2 flex items-center justify-between gap-2">
+            <label for="baggageSelect" class="text-xs font-semibold text-muted-custom shrink-0">Bagaż:</label>
+            <select id="baggageSelect" onchange="setBaggageMode(this.value)" class="w-full bg-transparent text-xs font-bold focus:outline-none text-right sm:text-left">
+              <option value="backpack" class="bg-slate-800 text-white">1. Mały plecak pod fotel (0 zł – w cenie)</option>
+              <option value="cabin10kg" class="bg-slate-800 text-white">2. Walizka kabinowa 10 kg (55×40×20 cm)</option>
+              <option value="checked20kg" class="bg-slate-800 text-white">3. Walizka rejestrowana 20 kg (do luku)</option>
+              <option value="checked32kg" class="bg-slate-800 text-white">4. Duża walizka 23 kg / 32 kg (Max do luku)</option>
+              <option value="shared20kg" class="bg-slate-800 text-white">5. Wspólna 1 walizka 20 kg na całą Ekipę</option>
+            </select>
+          </div>
+
+          <div class="lg:col-span-7 flex flex-wrap items-center lg:justify-end gap-2">
+            <button id="btnWeekendMode" onclick="toggleWeekendMode()" class="flex-auto sm:flex-initial justify-center flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl calm-alt text-[11px] sm:text-xs font-semibold whitespace-nowrap hover:opacity-90 transition" title="Wylot Czw/Pt po pracy, powrót w niedzielę lub wczesnym rankiem w poniedziałek">
+              <span>Weekend bez urlopu</span>
+            </button>
+
+            <button id="btnComfortHours" onclick="toggleComfortableHours()" class="flex-auto sm:flex-initial justify-center flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl calm-alt text-[11px] sm:text-xs font-semibold whitespace-nowrap hover:opacity-90 transition" title="Odrzuca wyloty przed 07:00 rano i lądowania po północy">
+              <span>Wygodne godziny (07–22:30)</span>
+            </button>
+
+            <button id="btnWarmMode" onclick="toggleWarmMode()" class="flex-auto sm:flex-initial justify-center flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl calm-alt text-[11px] sm:text-xs font-semibold whitespace-nowrap hover:opacity-90 transition">
+              <span>Ciepłe kraje 18°C+</span>
+            </button>
+
+            <button onclick="toggleSlidersDrawer()" class="w-full sm:w-auto justify-center flex items-center gap-1.5 px-3.5 py-2 rounded-xl calm-alt text-xs font-semibold text-blue-400">
+              <span id="slidersSummaryLabel">Suwaki czasu i budżetu ▾</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- DYNAMIC POLISH HOLIDAYS & LONG WEEKENDS QUICK PRESETS -->
+        <div id="holidayPresetsContainer" class="flex items-center flex-wrap gap-1.5 pt-1 border-t border-slate-700/20">
+          <span class="text-[11px] font-semibold text-muted-custom mr-1">Święta i długie weekendy:</span>
+        </div>
+
+        <!-- 4. TIME-RESPECT & BUDGET SLIDERS -->
+        <div id="slidersDrawer" class="hidden calm-alt rounded-xl p-4 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="calm-panel rounded-xl p-3">
+              <div class="flex flex-wrap justify-between gap-1 text-xs mb-1.5">
+                <span class="text-muted-custom font-medium">Maksymalna cena / os.</span>
+                <span id="maxPriceLabel" class="font-bold text-emerald-500">2800 zł</span>
+              </div>
+              <input id="maxPrice" type="range" min="60" max="10000" step="20" value="2800" oninput="onSliderParamChange()" class="w-full cursor-pointer" />
+              <div class="flex justify-between text-[11px] text-muted-custom mt-1">
+                <span>60 zł</span>
+                <span>Europa ~450 zł</span>
+                <span>10 000 zł</span>
+              </div>
+            </div>
+
+            <div class="calm-panel rounded-xl p-3">
+              <div class="flex flex-wrap justify-between gap-1 text-xs mb-1.5">
+                <span class="text-muted-custom font-medium">Liczba przesiadek</span>
+                <span id="maxStopsLabel" class="font-bold text-blue-400">Do 2 przesiadek</span>
+              </div>
+              <input id="maxStops" type="range" min="0" max="2" step="1" value="2" oninput="onSliderParamChange()" class="w-full cursor-pointer" />
+              <div class="flex justify-between text-[11px] text-muted-custom mt-1">
+                <span>0 (Bezpośrednie)</span>
+                <span>1 przesiadka</span>
+                <span>2 przesiadki</span>
+              </div>
+            </div>
+
+            <div id="layoverSliderBox" class="calm-panel rounded-xl p-3">
+              <div class="flex flex-wrap justify-between gap-1 text-xs mb-1.5">
+                <span class="text-muted-custom font-medium">Max czas 1 przesiadki</span>
+                <span id="maxLayoverLabel" class="font-bold">do 6 godz.</span>
+              </div>
+              <input id="maxLayoverHours" type="range" min="1" max="24" step="1" value="6" oninput="onSliderParamChange()" class="w-full cursor-pointer" />
+              <div class="flex justify-between text-[11px] text-muted-custom mt-1">
+                <span>1 godz.</span>
+                <span>8 godz.</span>
+                <span>24 godz.</span>
+              </div>
+            </div>
+
+            <div class="calm-panel rounded-xl p-3">
+              <div class="flex flex-wrap justify-between gap-1 text-xs mb-1.5">
+                <span class="text-muted-custom font-medium">Max łączny czas podróży</span>
+                <span id="maxTravelLabel" class="font-bold">do 26 godz.</span>
+              </div>
+              <input id="maxTravelHours" type="range" min="3" max="58" step="1" value="26" oninput="onSliderParamChange()" class="w-full cursor-pointer" />
+              <div class="flex justify-between text-[11px] text-muted-custom mt-1">
+                <span>3 godz.</span>
+                <span>24 godz.</span>
+                <span>58 godz.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 pt-2 border-t border-slate-700/30">
+            <div class="calm-panel rounded-xl p-2.5">
+              <label class="block text-[11px] text-muted-custom mb-1">Rodzaj biletu</label>
+              <select id="tripType" onchange="toggleNightsInput()" class="w-full bg-transparent text-xs font-semibold focus:outline-none">
+                <option value="roundtrip" class="bg-slate-800 text-white">W obie strony</option>
+                <option value="oneway" class="bg-slate-800 text-white">W jedną stronę</option>
+              </select>
+            </div>
+
+            <div class="calm-panel rounded-xl p-2.5">
+              <label class="block text-[11px] text-muted-custom mb-1">Kody lotnisk / filtr</label>
+              <input id="destQuery" type="text" value="WORLD" placeholder="np. SIN, MLA, PRG" class="w-full bg-transparent text-xs font-semibold focus:outline-none" />
+            </div>
+
+            <div id="nightsBox" class="calm-panel rounded-xl p-2.5">
+              <label class="block text-[11px] text-muted-custom mb-1">Liczba nocy na miejscu</label>
+              <div class="flex items-center gap-1.5 text-xs">
+                <input id="nightsMin" type="number" min="1" max="30" value="2" class="w-11 calm-alt text-center rounded py-0.5 font-semibold" />
+                <span class="text-muted-custom">–</span>
+                <input id="nightsMax" type="number" min="1" max="30" value="12" class="w-11 calm-alt text-center rounded py-0.5 font-semibold" />
+              </div>
+            </div>
+
+            <div id="dateFromPickerWrap" class="calm-panel rounded-xl p-2.5 relative">
+              <label class="block text-[11px] text-muted-custom mb-1">Wylot od</label>
+              <input id="dateFrom" type="hidden" />
+              <button
+                id="dateFromTrigger"
+                type="button"
+                onclick="toggleDayPickerPopover('dateFrom', event)"
+                class="w-full flex items-center justify-between gap-1.5 text-xs font-semibold text-left focus:outline-none py-0.5"
+              >
+                <span class="flex items-center gap-1.5 whitespace-nowrap">
+                  <svg class="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2.5"></rect>
+                    <path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"></path>
+                  </svg>
+                  <span id="dateFromLabel">Wybierz datę</span>
+                </span>
+                <svg class="w-3 h-3 text-muted-custom shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              <div id="dateFromPopover" class="hidden absolute z-50 right-0 sm:right-auto sm:left-0 lg:left-auto lg:right-0 mt-2.5 w-72 calm-panel rounded-2xl shadow-2xl p-3 space-y-2.5"></div>
+            </div>
+
+            <div id="dateToPickerWrap" class="calm-panel rounded-xl p-2.5 col-span-2 sm:col-span-2 lg:col-span-1 relative">
+              <label class="block text-[11px] text-muted-custom mb-1">Powrót do</label>
+              <input id="dateTo" type="hidden" />
+              <button
+                id="dateToTrigger"
+                type="button"
+                onclick="toggleDayPickerPopover('dateTo', event)"
+                class="w-full flex items-center justify-between gap-1.5 text-xs font-semibold text-left focus:outline-none py-0.5"
+              >
+                <span class="flex items-center gap-1.5 whitespace-nowrap">
+                  <svg class="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2.5"></rect>
+                    <path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"></path>
+                  </svg>
+                  <span id="dateToLabel">Wybierz datę</span>
+                </span>
+                <svg class="w-3 h-3 text-muted-custom shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              <div id="dateToPopover" class="hidden absolute z-50 left-0 sm:left-auto sm:right-0 mt-2.5 w-72 calm-panel rounded-2xl shadow-2xl p-3 space-y-2.5"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. SORTING & SCAN BUTTON -->
+        <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 pt-1">
+          <div class="flex items-center flex-wrap gap-1.5">
+            <span class="text-xs text-muted-custom mr-0.5 shrink-0">Sortuj:</span>
+            <button id="sortPriceBtn" onclick="setSortMode('price')" class="text-[11px] sm:text-xs px-2.5 sm:px-3 py-1.5 rounded-lg font-semibold bg-blue-600 text-white whitespace-nowrap">
+              Najtańszy bilet
+            </button>
+            <button id="sortSmartBtn" onclick="setSortMode('smart')" class="text-[11px] sm:text-xs px-2.5 sm:px-3 py-1.5 rounded-lg font-semibold calm-alt text-muted-custom whitespace-nowrap">
+              Cena + Czas
+            </button>
+            <button id="sortTotalBtn" onclick="setSortMode('total_trip')" class="text-[11px] sm:text-xs px-2.5 sm:px-3 py-1.5 rounded-lg font-semibold calm-alt text-muted-custom whitespace-nowrap">
+              Z noclegiem
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="resetDefaultsBtn" type="button" onclick="resetToDefaults()" class="calm-alt hover:opacity-85 active:scale-[0.99] text-xs font-semibold px-3 py-3 rounded-xl flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 transition" title="Przywróć ustawienia podstawowe (Cały Świat, 12 lotnisk, domyślne filtry i daty)">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/>
+              </svg>
+              <span>Resetuj</span>
+            </button>
+            <button id="scanBtn" onclick="runFlightScan()" class="flex-1 md:flex-initial bg-blue-600 hover:bg-blue-500 active:scale-[0.99] text-white font-bold text-xs sm:text-sm px-4 sm:px-6 py-3 rounded-xl shadow flex items-center justify-center gap-2 whitespace-nowrap transition">
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span>Wyszukaj najtańsze loty</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATUS BAR & CARRIER CHIPS -->
+      <div id="scanStatsBar" class="hidden calm-panel rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div id="scanSummaryText" class="text-xs"></div>
+        <div id="carrierFilterChips" class="flex flex-wrap items-center gap-1.5"></div>
+      </div>
+
+      <!-- LOADING BOX -->
+      <div id="loadingBox" class="hidden calm-panel rounded-2xl p-10 text-center space-y-3">
+        <div class="w-9 h-9 mx-auto border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <div class="text-sm font-bold">Wyszukujemy najtańsze połączenia lotnicze...</div>
+        <p class="text-xs text-muted-custom">Sprawdzamy linie bezpośrednie i przesiadkowe z uwzględnieniem wybranego bagażu i czasu</p>
+      </div>
+
+      <!-- BOARDING PASS CARDS GRID -->
+      <div id="dealsGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+    </section>
+
+    <!-- ================= TAB 2: ROUTE COMPARATOR ================= -->
+    <section id="tab-compare" class="hidden space-y-4">
+      <div class="calm-panel rounded-2xl p-4 sm:p-5 space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-2 border-b border-slate-700/30 pb-3">
+          <div>
+            <h2 class="text-base font-bold">Porównanie kierunków, przewoźników i cen na miejscu</h2>
+            <p class="text-xs text-muted-custom">Zobacz, z którego lotniska i jaką linią dany kierunek wychodzi najtaniej</p>
+          </div>
+          <button onclick="runFlightScan()" class="text-xs font-semibold calm-alt px-3.5 py-2 rounded-lg">Odśwież wyniki</button>
+        </div>
+
+        <div id="directVsAggSection" class="hidden space-y-2">
+          <div class="text-xs font-bold text-blue-400">Porównanie ceny tego samego lotu (Bezpośrednio u linii vs Wyszukiwarka)</div>
+          <div id="directVsAggList" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+        </div>
+
+        <div id="destCompareList" class="space-y-3"></div>
+
+        <div id="routeHistorySection" class="hidden space-y-2 pt-3 border-t border-slate-700/30">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <div class="text-xs font-bold text-emerald-500">Historia i trend cen tras (z Twojej bazy skanera)</div>
+              <p class="text-[11px] text-muted-custom">Zakres między rekordem najniższej ceny, średnią oraz ceną maksymalną na danej trasie</p>
+            </div>
+          </div>
+          <div id="routeHistoryList" class="grid grid-cols-1 md:grid-cols-2 gap-2.5"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 3: MONTHLY CALENDAR ================= -->
+    <section id="tab-calendar" class="hidden space-y-4">
+      <div class="calm-panel rounded-2xl p-4 sm:p-5 space-y-4">
+        <div class="border-b border-slate-700/30 pb-3">
+          <h2 class="text-base font-bold">Kalendarz najniższych cen dzień po dniu</h2>
+          <p class="text-xs text-muted-custom">Wybierz dowolne lotnisko w Polsce lub na świecie (Skąd ⇄ Dokąd) i sprawdź najtańsze dni</p>
+        </div>
+
+        <input id="calDestQuery" type="hidden" value="IT" />
+        <input id="calOrigin" type="hidden" value="ALL" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 items-stretch">
+          <div class="calm-alt rounded-xl p-2.5 relative min-w-0">
+            <div class="flex items-center justify-between gap-1 mb-1">
+              <label for="calOriginSearchInput" class="text-xs text-muted-custom">Skąd (Polska lub świat)</label>
+              <button type="button" onclick="swapCalendarOriginDest()" class="text-[11px] font-bold text-blue-400 hover:underline whitespace-nowrap" title="Zamień kierunek (Skąd ⇄ Dokąd)">⇄ Zamień</button>
+            </div>
+            <div class="flex items-center gap-1.5 min-w-0">
+              <input
+                id="calOriginSearchInput"
+                type="text"
+                autocomplete="off"
+                placeholder="Cała Polska (12) lub np. FNC"
+                oninput="onCalOriginSearchInput(this.value)"
+                onfocus="if(this.value) onCalOriginSearchInput(this.value)"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();applyTypedOriginToCal();}"
+                class="w-full min-w-0 bg-transparent text-xs font-semibold focus:outline-none placeholder:text-slate-400"
+              />
+              <button type="button" onclick="resetCalOriginToPoland()" class="text-[11px] font-semibold text-emerald-500 hover:underline shrink-0 whitespace-nowrap" title="Ustaw Cała Polska (12 lotnisk)">PL</button>
+            </div>
+            <div id="calOriginSuggestionsBox" class="hidden absolute z-50 left-0 right-0 mt-2 calm-panel rounded-xl shadow-2xl border border-slate-700/40 max-h-72 overflow-y-auto"></div>
+          </div>
+
+          <div class="calm-alt rounded-xl p-2.5 relative min-w-0">
+            <label for="calDestSearchInput" class="block text-xs text-muted-custom mb-1">Szukaj kraju lub miasta</label>
+            <div class="flex items-center gap-1.5 min-w-0">
+              <svg class="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"></circle>
+                <path stroke-linecap="round" d="M20 20l-3.5-3.5"></path>
+              </svg>
+              <input
+                id="calDestSearchInput"
+                type="text"
+                autocomplete="off"
+                placeholder="Kraj, miasto lub IATA..."
+                oninput="onCalDestSearchInput(this.value)"
+                onfocus="onCalDestSearchInput(this.value)"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();loadMonthlyCalendar();}"
+                class="w-full min-w-0 bg-transparent text-xs font-semibold focus:outline-none placeholder:text-slate-400"
+              />
+            </div>
+            <div id="calDestSuggestionsBox" class="hidden absolute z-50 left-0 right-0 mt-2 calm-panel rounded-xl shadow-2xl border border-slate-700/40 max-h-72 overflow-y-auto"></div>
+          </div>
+
+          <div class="calm-alt rounded-xl p-2.5 min-w-0">
+            <label for="calDestSelect" class="block text-xs text-muted-custom mb-1">Lista państw i miast</label>
+            <select id="calDestSelect" onchange="onCalDestDropdownChange(this.value)" class="w-full min-w-0 truncate bg-transparent text-xs font-semibold focus:outline-none">
+              <option value="IT" class="bg-slate-800 text-white">Włochy (IT)</option>
+            </select>
+          </div>
+
+          <div id="calMonthPickerWrap" class="calm-alt rounded-xl p-2.5 relative">
+            <label class="block text-xs text-muted-custom mb-1">Miesiąc</label>
+            <input id="calMonth" type="hidden" value="2026-12" />
+            <button
+              id="calMonthTrigger"
+              type="button"
+              onclick="toggleCalMonthPopover(event)"
+              class="w-full flex items-center justify-between gap-2 text-xs font-semibold text-left focus:outline-none py-0.5"
+            >
+              <span class="flex items-center gap-1.5 truncate">
+                <svg class="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2.5"></rect>
+                  <path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"></path>
+                </svg>
+                <span id="calMonthLabel">Grudzień 2026</span>
+              </span>
+              <svg class="w-3.5 h-3.5 text-muted-custom shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+
+            <div
+              id="calMonthPopover"
+              class="hidden absolute z-50 left-0 sm:right-0 sm:left-auto mt-2.5 w-64 calm-panel rounded-2xl shadow-2xl p-3 space-y-2.5"
+            >
+              <div class="flex items-center justify-between px-1">
+                <button
+                  id="calMonthPrevYear"
+                  type="button"
+                  onclick="shiftCalMonthPickerYear(-1)"
+                  class="w-7 h-7 rounded-lg calm-alt hover:border-blue-500 flex items-center justify-center text-xs font-bold transition"
+                  aria-label="Poprzedni rok"
+                >&lsaquo;</button>
+                <span id="calMonthPickerYear" class="text-sm font-extrabold tracking-wide">2026</span>
+                <button
+                  id="calMonthNextYear"
+                  type="button"
+                  onclick="shiftCalMonthPickerYear(1)"
+                  class="w-7 h-7 rounded-lg calm-alt hover:border-blue-500 flex items-center justify-center text-xs font-bold transition"
+                  aria-label="Następny rok"
+                >&rsaquo;</button>
+              </div>
+              <div id="calMonthGrid" class="grid grid-cols-3 gap-1.5"></div>
+              <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-700/30">
+                <button
+                  type="button"
+                  onclick="selectCurrentCalMonth(0)"
+                  class="flex-1 text-[11px] font-semibold text-blue-400 hover:bg-blue-500/10 rounded-lg py-1.5 transition"
+                >Ten miesiąc</button>
+                <button
+                  type="button"
+                  onclick="selectCurrentCalMonth(1)"
+                  class="flex-1 text-[11px] font-semibold text-emerald-500 hover:bg-emerald-500/10 rounded-lg py-1.5 transition"
+                >Następny</button>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="loadMonthlyCalendar()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl py-3 px-4 transition-colors">
+            Pobierz kalendarz cen
+          </button>
+        </div>
+
+        <div id="calendarContent" class="space-y-4 pt-2"></div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 4: PROMO DEALS & CHARTERS (RSS) ================= -->
+    <section id="tab-promos" class="hidden space-y-4">
+      <div class="calm-panel rounded-2xl p-4 sm:p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-700/30 pb-3">
+          <div>
+            <h2 class="text-base font-bold">Czartery, Błędy Cenowe i Okazje Dnia</h2>
+            <p class="text-xs text-muted-custom">Na żywo z polskich serwisów okazji (Fly4free.pl, MlecznePodróże.pl &amp; WakacyjniPiraci.pl) – czartery TUI / Rainbow, all-inclusive i błędy taryfowe</p>
+          </div>
+          <button onclick="loadPromoDeals(true)" class="calm-alt hover:border-blue-500 text-xs font-semibold px-3 py-2 rounded-xl shrink-0">
+            Odśwież okazje
+          </button>
+        </div>
+
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2.5">
+          <div class="calm-alt rounded-xl px-3 py-2 flex items-center gap-2 flex-1">
+            <svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"></circle>
+              <path stroke-linecap="round" d="M20 20l-3.5-3.5"></path>
+            </svg>
+            <input
+              id="promoSearchInput"
+              type="text"
+              oninput="renderPromoDealsFiltered()"
+              placeholder="Szukaj np. Hiszpania, Dominikana, czarter..."
+              class="w-full bg-transparent text-xs font-semibold focus:outline-none placeholder:text-slate-400"
+            />
+          </div>
+          <div id="promoFilterChips" class="flex items-center gap-1.5 flex-wrap">
+            <button type="button" onclick="setPromoCategory('all', this)" class="promo-cat-btn text-xs px-3 py-1.5 rounded-lg font-semibold bg-blue-600 text-white">Wszystkie</button>
+            <button type="button" onclick="setPromoCategory('czarter', this)" class="promo-cat-btn text-xs px-3 py-1.5 rounded-lg font-semibold calm-alt text-muted-custom">Czartery</button>
+            <button type="button" onclick="setPromoCategory('hit', this)" class="promo-cat-btn text-xs px-3 py-1.5 rounded-lg font-semibold calm-alt text-muted-custom">Hity i Błędy</button>
+            <button type="button" onclick="setPromoCategory('fly4free', this)" class="promo-cat-btn text-xs px-3 py-1.5 rounded-lg font-semibold calm-alt text-muted-custom">Fly4free</button>
+            <button type="button" onclick="setPromoCategory('mleczne', this)" class="promo-cat-btn text-xs px-3 py-1.5 rounded-lg font-semibold calm-alt text-muted-custom">MlecznePodróże</button>
+            <button type="button" onclick="setPromoCategory('wakacyjnipiraci', this)" class="promo-cat-btn text-xs px-3 py-1.5 rounded-lg font-semibold calm-alt text-muted-custom">WakacyjniPiraci</button>
+          </div>
+        </div>
+
+        <div id="promosGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 5: SQUAD POLL, WHATSAPP, EMAIL & SECURITY ================= -->
+    <section id="tab-squad" class="hidden space-y-4">
+
+      <div class="calm-panel rounded-2xl p-4 sm:p-5 space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-2 border-b border-slate-700/30 pb-3">
+          <div>
+            <h2 class="text-base font-bold">Koszyk Ekipy i wspólne głosowanie</h2>
+            <p class="text-xs text-muted-custom">Zapisane propozycje lotów – wyślijcie gotową listę rodzicom lub znajomym na WhatsApp albo E-mail</p>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="flex items-center gap-1.5 calm-alt rounded-lg px-2.5 py-1.5">
+              <span class="text-xs text-muted-custom">Imię:</span>
+              <input
+                id="squadNickInput"
+                type="text"
+                placeholder="Wpisz imię"
+                oninput="onNickInputChange(this.value)"
+                class="w-24 bg-transparent text-xs font-semibold focus:outline-none"
+              />
+            </div>
+            <button onclick="shareTopDealsOnWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-2 rounded-lg">
+              Wyślij na WhatsApp
+            </button>
+            <button onclick="shareTopDealsViaEmail()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3.5 py-2 rounded-lg">
+              Wyślij na E-mail
+            </button>
+            <button onclick="copySquadPollLink()" class="calm-alt hover:opacity-80 text-xs font-semibold px-3 py-2 rounded-lg">
+              Kopiuj link do głosowania
+            </button>
+          </div>
+        </div>
+        <div id="savedDealsList" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+      </div>
+
+      <div class="calm-panel rounded-2xl p-4 sm:p-5 space-y-3">
+        <div class="flex items-center justify-between flex-wrap gap-2 border-b border-slate-700/30 pb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="text-xs font-bold text-emerald-500">Automatyczny Strażnik Cen 24/7 (skanuje w tle co 60 min)</span>
+            </div>
+            <p id="autoScannerStatusText" class="text-xs text-muted-custom mt-0.5">Status: Aktywny na serwerze</p>
+          </div>
+          <button onclick="triggerAutoScannerNow()" class="text-xs font-semibold calm-alt px-3.5 py-2 rounded-lg">
+            Skanuj wszystkie alerty teraz
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 calm-alt p-3 rounded-xl">
+          <input id="wlTitle" type="text" placeholder="Nazwa (np. Wakacje z rodzicami)" class="calm-panel rounded-lg px-3 py-2 text-xs" />
+          <input id="wlAirports" type="text" value="WAW,WMI,KRK,KTW,GDN,WRO" placeholder="Lotniska" class="calm-panel rounded-lg px-3 py-2 text-xs" />
+          <input id="wlDest" type="text" placeholder="Kraj (np. Cypr, Grecja, Włochy)" class="calm-panel rounded-lg px-3 py-2 text-xs" />
+          <input id="wlMaxPrice" type="number" value="450" placeholder="Max zł/os." class="calm-panel rounded-lg px-3 py-2 text-xs" />
+          <button onclick="createWatchlistAlert()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg py-2 px-3">
+            + Dodaj alert cenowy
+          </button>
+        </div>
+        <div id="watchlistContainer" class="space-y-2"></div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="calm-panel rounded-2xl p-4 sm:p-5 space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-700/30 pb-2">
+            <h3 class="text-sm font-bold text-emerald-500">Powiadomienia: WhatsApp, E-mail, Discord i Telegram</h3>
+          </div>
+          <div class="space-y-2.5 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label class="block text-muted-custom mb-1">Numer telefonu WhatsApp (np. 48500600700)</label>
+                <input id="setWaPhone" type="text" placeholder="np. 48500600700" class="w-full calm-alt rounded-lg px-3 py-2 text-xs" />
+              </div>
+              <div>
+                <label class="block text-muted-custom mb-1">Adres E-mail odbiorcy (np. rodzice@gmail.com)</label>
+                <input id="setEmailRecipient" type="email" placeholder="np. rodzice@gmail.com" class="w-full calm-alt rounded-lg px-3 py-2 text-xs" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label class="block text-muted-custom mb-1">Nadawca SMTP E-mail (opcjonalnie do auto-maili)</label>
+                <input id="setSmtpSender" type="email" placeholder="twoj.mail@gmail.com" class="w-full calm-alt rounded-lg px-3 py-2 text-xs" />
+              </div>
+              <div>
+                <label class="block text-muted-custom mb-1">Hasło aplikacji SMTP (opcjonalnie, szyfrowane)</label>
+                <input id="setSmtpPassword" type="password" placeholder="Hasło aplikacji Gmail/WP" class="w-full calm-alt rounded-lg px-3 py-2 text-xs" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label class="block text-muted-custom mb-1">Discord Webhook URL (opcjonalnie)</label>
+                <input id="setDiscordWebhook" type="text" placeholder="https://discord.com/api/webhooks/..." class="w-full calm-alt rounded-lg px-3 py-2 text-xs" />
+              </div>
+              <div>
+                <label class="block text-muted-custom mb-1">Klucz CallMeBot WhatsApp (opcjonalnie)</label>
+                <input id="setWaApiKey" type="text" placeholder="Klucz API CallMeBot" class="w-full calm-alt rounded-lg px-3 py-2 text-xs" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-muted-custom mb-1">Telegram Bot Token</label>
+                <input id="setTgToken" type="text" placeholder="123456:ABC..." class="w-full calm-alt rounded-lg px-3 py-2 text-xs" />
+              </div>
+              <div>
+                <label class="block text-muted-custom mb-1">Telegram Chat ID</label>
+                <input id="setTgChat" type="text" placeholder="-100123456789" class="w-full calm-alt rounded-lg px-3 py-2 text-xs" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="calm-panel rounded-2xl p-4 sm:p-5 space-y-3 flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-700/30 pb-2">
+              <h3 class="text-sm font-bold">Zabezpieczenia strony i nazwa</h3>
+              <span class="text-[11px] px-2 py-0.5 rounded bg-blue-500/15 text-blue-400 font-semibold">Obfuskacja + Cookie</span>
+            </div>
+            <div class="space-y-2.5 text-xs">
+              <div>
+                <label class="block text-muted-custom mb-1">Nazwa strony wyświetlana w nagłówku</label>
+                <input id="setBrandName" type="text" value="SkyPulse.pl" class="w-full calm-alt rounded-lg px-3 py-2 text-xs" />
+              </div>
+              <div class="flex items-center justify-between calm-alt rounded-lg px-3 py-2.5">
+                <div>
+                  <div class="font-semibold">Wymagaj kodu PIN przy wejściu na stronę</div>
+                  <div class="text-[11px] text-muted-custom">Domyślny PIN: <strong class="text-blue-400">loty2026</strong></div>
+                </div>
+                <input id="setRequirePin" type="checkbox" class="w-4 h-4 accent-blue-600 cursor-pointer" />
+              </div>
+              <div>
+                <label class="block text-muted-custom mb-1">Ustaw nowy kod PIN (zostaw puste, aby nie zmieniać)</label>
+                <input id="setNewPin" type="password" placeholder="Wpisz nowy kod PIN..." class="w-full calm-alt rounded-lg px-3 py-2 text-xs" />
+              </div>
+            </div>
+          </div>
+
+          <button onclick="saveAllSettings()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-3 rounded-xl mt-3">
+            Zapisz wszystkie ustawienia
+          </button>
+        </div>
+      </div>
+
+      <div class="calm-panel rounded-2xl p-4 sm:p-5 space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-700/30 pb-2">
+          <div>
+            <h3 class="text-sm font-bold">Silniki lotów i opcjonalne API (Amadeus GDS + Travelpayouts)</h3>
+            <p class="text-[11px] text-muted-custom">Bez kluczy działają darmowe silniki (Ryanair Direct + Kiwi Multi-Airline z Wizz/LOT/Lufthansa/Norwegian/easyJet + Czartery RSS). Klucze aktywują dodatkowe źródła natychmiast.</p>
+          </div>
+          <div class="flex items-center gap-1.5 flex-wrap shrink-0">
+            <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-semibold">4 silniki bazowe: Aktywne</span>
+            <span id="badgeAmadeusStatus" class="text-[11px] px-2 py-0.5 rounded bg-slate-500/15 text-muted-custom font-semibold">Amadeus: Opcjonalny</span>
+            <span id="badgeTpStatus" class="text-[11px] px-2 py-0.5 rounded bg-slate-500/15 text-muted-custom font-semibold">Travelpayouts: Opcjonalny</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 text-xs">
+          <div class="calm-alt rounded-xl p-3 space-y-2 border border-slate-700/20">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-bold">Amadeus Self-Service GDS (LOT, Lufthansa, Air France, Emirates…)</span>
+              <a href="https://developers.amadeus.com/" target="_blank" rel="noopener" class="text-[11px] text-blue-400 hover:underline shrink-0">Darmowe konto dev →</a>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label class="block text-muted-custom mb-1">Amadeus Client ID (API Key)</label>
+                <input id="setAmadeusId" type="text" placeholder="Wpisz API Key..." class="w-full calm-panel border border-slate-700/30 rounded-lg px-2.5 py-2 text-xs" />
+              </div>
+              <div>
+                <label class="block text-muted-custom mb-1">Amadeus Client Secret (szyfrowane)</label>
+                <input id="setAmadeusSecret" type="password" placeholder="Wpisz API Secret..." class="w-full calm-panel border border-slate-700/30 rounded-lg px-2.5 py-2 text-xs" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-muted-custom mb-1">Środowisko Amadeus</label>
+              <select id="setAmadeusEnv" class="w-full calm-panel border border-slate-700/30 rounded-lg px-2.5 py-2 text-xs">
+                <option value="test">Test (Sandbox — darmowy limit zapytań)</option>
+                <option value="production">Production (Live ceny taryfowe)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="calm-alt rounded-xl p-3 space-y-2 border border-slate-700/20">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-bold">Travelpayouts / Aviasales Data API (Kalendarze + Afiliacja)</span>
+              <a href="https://www.travelpayouts.com/" target="_blank" rel="noopener" class="text-[11px] text-blue-400 hover:underline shrink-0">Panel partnera →</a>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label class="block text-muted-custom mb-1">Travelpayouts API Token (szyfrowane)</label>
+                <input id="setTpToken" type="password" placeholder="Wpisz X-Access-Token..." class="w-full calm-panel border border-slate-700/30 rounded-lg px-2.5 py-2 text-xs" />
+              </div>
+              <div>
+                <label class="block text-muted-custom mb-1">Marker Partnerski (opcjonalnie do prowizji)</label>
+                <input id="setTpMarker" type="text" placeholder="np. 123456" class="w-full calm-panel border border-slate-700/30 rounded-lg px-2.5 py-2 text-xs" />
+              </div>
+            </div>
+            <p class="text-[11px] text-muted-custom">Gdy brak kluczy, zapytania pomijane są w &lt;1 ms bez spowalniania skanu. Po wpisaniu kluczy nowe źródła dołączą automatycznie do porównywarki.</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1">
+          <div class="text-[11px] text-muted-custom">Wbudowane bez kluczy: Ryanair Direct, Kiwi Multi-Airline, Składak 2× One-Way, Czartery RSS (Fly4free + MlecznePodróże + WakacyjniPiraci).</div>
+          <button onclick="saveAllSettings()" class="w-full sm:w-auto px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2.5 rounded-xl shrink-0">
+            Zapisz klucze API i ustawienia
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= FLOATING SIDE-BY-SIDE COMPARISON BAR ================= -->
+  <div id="compareDock" class="fixed bottom-16 inset-x-0 z-40 hidden px-3 sm:px-5">
+    <div class="max-w-xl mx-auto calm-panel rounded-2xl p-3 shadow-2xl flex items-center justify-between gap-2 border border-blue-500/60">
+      <div class="text-xs">
+        <span class="font-bold text-blue-400" id="compareDockCount">Wybrano 0/3 lotów</span>
+        <span id="compareDockRoutes" class="text-muted-custom block sm:inline sm:ml-2 truncate max-w-[200px] sm:max-w-xs"></span>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button onclick="openCompareModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl">
+          Porównaj obok siebie
+        </button>
+        <button onclick="clearCompareQueue()" class="calm-alt hover:opacity-80 text-xs px-2.5 py-2 rounded-xl">
+          Wyczyść
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= COOKIE CONSENT BANNER ================= -->
+  <div id="cookieBanner" class="fixed bottom-16 inset-x-0 z-40 hidden px-3 sm:px-5">
+    <div class="max-w-3xl mx-auto calm-panel rounded-2xl p-3.5 shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-blue-500/40">
+      <div class="text-xs leading-relaxed">
+        <strong>Pliki Cookie:</strong> Strona zapisuje w plikach Cookie Twoje imię, wielkość Ekipy, wybrane polskie lotniska, ostatni kraj, rodzaj walizki, motyw kolorystyczny oraz adres E-mail/WhatsApp.
+      </div>
+      <button onclick="acceptCookiesBanner()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-xl shrink-0">
+        Akceptuję pliki Cookie
+      </button>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 hidden calm-panel border-blue-500 text-xs font-semibold px-4 py-2.5 rounded-xl shadow-2xl"></div>
+
+  <!-- ================= BOTTOM NAVIGATION BAR ================= -->
+  <nav class="fixed bottom-0 inset-x-0 z-40 calm-panel border-t px-1.5 py-1.5 shadow-lg">
+    <div class="max-w-xl mx-auto grid grid-cols-5 gap-1">
+      <button onclick="switchTab('deals')" id="nav-deals" class="flex flex-col items-center py-1.5 rounded-xl text-blue-400 bg-blue-500/10 font-bold">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+        <span class="text-[10px] sm:text-[11px] mt-1">Szukaj</span>
+      </button>
+      <button onclick="switchTab('compare')" id="nav-compare" class="flex flex-col items-center py-1.5 rounded-xl text-muted-custom hover:opacity-80">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span class="text-[10px] sm:text-[11px] mt-1">Porównaj</span>
+      </button>
+      <button onclick="switchTab('calendar')" id="nav-calendar" class="flex flex-col items-center py-1.5 rounded-xl text-muted-custom hover:opacity-80">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="text-[10px] sm:text-[11px] mt-1">Kalendarz</span>
+      </button>
+      <button onclick="switchTab('promos')" id="nav-promos" class="flex flex-col items-center py-1.5 rounded-xl text-muted-custom hover:opacity-80">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14 2 9.27l7.1-1.01L12 2z"/></svg>
+        <span class="text-[10px] sm:text-[11px] mt-1">Czartery</span>
+      </button>
+      <button onclick="switchTab('squad')" id="nav-squad" class="flex flex-col items-center py-1.5 rounded-xl text-muted-custom hover:opacity-80 relative">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="text-[10px] sm:text-[11px] mt-1">Ekipa</span>
+        <span id="savedCountBadge" class="hidden absolute top-1 right-2 sm:right-4 bg-emerald-600 text-white text-[10px] font-bold px-1.5 rounded-full">0</span>
+      </button>
+    </div>
+  </nav>
+
+  <script src="/static/app.bundle.js?v=f522772194"></script>
+</body>
+</html>

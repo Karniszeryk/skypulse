@@ -1,0 +1,28 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      - SKYPULSE_SECRET_KEY=${SKYPULSE_SECRET_KEY:-change_this_to_a_long_random_secret}
+    volumes:
+      - ./data:/app/data
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3 QUIC
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  caddy_data:
+  caddy_config:
