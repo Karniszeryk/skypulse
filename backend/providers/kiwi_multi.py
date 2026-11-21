@@ -239,7 +239,7 @@ async def _run_single_kiwi_query(
 
     filter_input: Dict[str, Any] = {
         "limit": limit,
-        "maxStopsCount": max(0, min(3, int(max_stops))),
+        "maxStopsCount": max(0, min(2 if trip_type != "oneway" else 3, int(max_stops))),
     }
     if max_travel_hours and max_travel_hours > 0:
         filter_input["maxDuration"] = int(max_travel_hours)

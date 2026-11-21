@@ -292,7 +292,7 @@ async def api_search(
     max_price: Optional[int] = Query(2800),
     dest_query: Optional[str] = Query("WORLD"),
     group_size: int = Query(4, ge=1, le=20),
-    max_stops: int = Query(2, ge=0, le=2),
+    max_stops: int = Query(2, ge=0, le=3),
     max_layover_hours: int = Query(6, ge=1, le=30),
     max_travel_hours: int = Query(26, ge=2, le=65),
     sort_by: str = Query("price"),

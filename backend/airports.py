@@ -74,6 +74,8 @@ WORLD_PRESETS: List[Dict[str, Any]] = [
     {"id": "MV", "label": "Malediwy", "group": "Ameryka i Azja", "codes": "MLE", "suggested_price": 4200, "suggested_stops": 2, "suggested_travel_h": 26, "suggested_layover_h": 8},
     {"id": "AU", "label": "Australia", "group": "Oceania i Antypody", "codes": "SYD,MEL,BNE,PER,ADL", "suggested_price": 6800, "suggested_stops": 2, "suggested_travel_h": 48, "suggested_layover_h": 16},
     {"id": "NZ", "label": "Nowa Zelandia", "group": "Oceania i Antypody", "codes": "AKL,CHC,WLG,ZQN,DUD,NSN", "suggested_price": 7500, "suggested_stops": 2, "suggested_travel_h": 52, "suggested_layover_h": 16},
+    {"id": "PF", "label": "Polinezja Francuska (Tahiti / Bora Bora)", "group": "Oceania i Antypody", "codes": "PPT,BOB,MOZ", "suggested_price": 9500, "suggested_stops": 3, "suggested_travel_h": 56, "suggested_layover_h": 22},
+    {"id": "FJ", "label": "Fidżi", "group": "Oceania i Antypody", "codes": "NAN,SUV", "suggested_price": 8500, "suggested_stops": 3, "suggested_travel_h": 54, "suggested_layover_h": 20},
 ]
 
 # Extra city-level suggestions for instant typeahead (letter-by-letter autocomplete)
@@ -152,6 +154,8 @@ CITY_SUGGESTIONS: List[Dict[str, Any]] = [
     {"label": "Male, Malediwy (MLE)", "codes": "MLE", "preset_id": "MV"},
     {"label": "Sydney / Melbourne, Australia (SYD / MEL)", "codes": "SYD,MEL", "preset_id": "AU"},
     {"label": "Auckland / Christchurch / Queenstown, Nowa Zelandia (AKL / CHC / ZQN)", "codes": "AKL,CHC,ZQN", "preset_id": "NZ"},
+    {"label": "Bora Bora / Tahiti (Papeete), Polinezja Francuska (BOB / PPT)", "codes": "BOB,PPT", "preset_id": "PF"},
+    {"label": "Nadi, Fidżi (NAN)", "codes": "NAN", "preset_id": "FJ"},
 ]
 
 KEYWORD_TO_CODES: Dict[str, List[str]] = {
@@ -177,6 +181,12 @@ KEYWORD_TO_CODES: Dict[str, List[str]] = {
     "christchurch": ["CHC"],
     "wellington": ["WLG"],
     "queenstown": ["ZQN"],
+    "polinezja francuska": ["PPT", "BOB", "MOZ"],
+    "polinezja": ["PPT", "BOB", "MOZ"],
+    "bora bora": ["BOB"],
+    "tahiti": ["PPT"],
+    "fidzi": ["NAN", "SUV"],
+    "fiji": ["NAN", "SUV"],
     "anglia": ["STN", "LTN", "LGW", "LHR", "MAN", "EDI", "BHX", "BRS", "LPL"],
     "uk": ["STN", "LTN", "LGW", "LHR", "MAN", "EDI", "BHX", "BRS", "LPL"],
     "wielka brytania": ["STN", "LTN", "LGW", "LHR", "MAN", "EDI", "BHX", "BRS", "LPL"],
@@ -769,6 +779,7 @@ def _estimate_defaults_by_codes(codes_str: str, preset_id: str = "") -> Dict[str
             first_code = tok
             break
     dist_km = estimate_distance_km("WAW", first_code) if first_code else None
+    pop = int((_WORLD_BY_CODE.get(first_code) or {}).get("p") or 0) if first_code else 0
     if dist_km is None:
         return {
             "dist_km": 0,
@@ -778,6 +789,16 @@ def _estimate_defaults_by_codes(codes_str: str, preset_id: str = "") -> Dict[str
             "suggested_layover_h": 8,
             "suggested_nights_min": 3,
             "suggested_nights_max": 12,
+        }
+    if dist_km >= 14000 or (dist_km >= 10000 and pop < 800000):
+        return {
+            "dist_km": dist_km,
+            "suggested_price": 9500,
+            "suggested_stops": 3,
+            "suggested_travel_h": 56,
+            "suggested_layover_h": 22,
+            "suggested_nights_min": 5,
+            "suggested_nights_max": 21,
         }
     if dist_km >= 11500:
         return {
