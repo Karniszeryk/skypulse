@@ -4,3 +4,5 @@ __pycache__/
 .secret_key
 tanie_loty.db
 .git/
+.github/
+tests/
