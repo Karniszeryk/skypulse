@@ -233,6 +233,12 @@ def api_logout(response: Response):
     return {"ok": True}
 
 
+@app.get("/health")
+def health_check() -> Dict[str, str]:
+    """Lightweight unauthenticated liveness endpoint for uptime and container probes."""
+    return {"status": "ok", "service": "skypulse", "version": app.version}
+
+
 @app.get("/api/info")
 def api_info(request: Request) -> Dict[str, Any]:
     lan_ip = get_lan_ip()
